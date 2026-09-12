@@ -24,7 +24,7 @@ class Group(Base):
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    username: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     first_name: Mapped[str] = mapped_column(String(255), default="")
 
 
@@ -60,3 +60,21 @@ class Lock(Base):
     group_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("groups.id"))
     lock_type: Mapped[str] = mapped_column(String(50))
     enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class WarningPolicy(Base):
+    __tablename__ = "warning_policies"
+    group_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    threshold: Mapped[int] = mapped_column(Integer, default=3)
+    mute_minutes: Mapped[int] = mapped_column(Integer, default=30)
+    reset_after_mute: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class CustomCommand(Base):
+    __tablename__ = "custom_commands"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    group_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("groups.id"))
+    command: Mapped[str] = mapped_column(String(64))
+    response: Mapped[str] = mapped_column(Text)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[int] = mapped_column(BigInteger)
