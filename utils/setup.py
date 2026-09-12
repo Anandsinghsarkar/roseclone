@@ -2,6 +2,7 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 import time
 from urllib.parse import quote
 
@@ -36,5 +37,12 @@ def verify_setup_token(token: str) -> dict:
 
 
 def build_setup_url(chat_id: int, user_id: int) -> str:
+    base = settings.WEB_APP_URL.strip().rstrip("/")
+    if not base:
+        domain = os.getenv("RAILWAY_PUBLIC_DOMAIN", "").strip()
+        if domain:
+            base = "https://" + domain
+    if not base:
+        raise RuntimeError("WEB_APP_URL is not configured")
     token = create_setup_token(chat_id, user_id)
-    return f"{settings.WEB_APP_URL.rstrip('/')}/setup?token={quote(token)}"
+    return f"{base}/setup?token={quote(token)}"
