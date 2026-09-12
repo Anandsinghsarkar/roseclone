@@ -1,21 +1,39 @@
 # Rose Clone Bot
 
-Telegram group-management bot built with aiogram 3.x and SQLAlchemy async.
+Telegram group/channel management bot built with aiogram 3.x, SQLAlchemy async and a FastAPI setup dashboard.
 
 ## Railway deployment
 1. Create a Railway service from this GitHub repository.
-2. Railway will build the included `Dockerfile` and run `python bot.py`.
-3. Add `BOT_TOKEN` and `BOT_OWNER_ID` as Railway Variables.
-4. For production persistence, add a Railway PostgreSQL service and set `DATABASE_URL` to its PostgreSQL connection string.
+2. Railway builds the included `Dockerfile` and starts `python bot.py`.
+3. Add these Railway Variables:
+   - `BOT_TOKEN` — Telegram BotFather token
+   - `BOT_OWNER_ID` — your Telegram numeric user ID
+   - `SETUP_TOKEN_SECRET` — long random secret
+   - `WEB_APP_URL` — the public HTTPS URL of this Railway service, e.g. `https://your-app.up.railway.app`
+4. For production persistence, add Railway PostgreSQL and set `DATABASE_URL` to its connection string.
+5. Deploy. Open the bot in Telegram, add it to a group, give it admin rights, then run `/setup` or use the **⚙️ Group Setup** button.
 
-SQLite is supported by default for simple/local deployments. Railway's normal filesystem is ephemeral, so PostgreSQL is recommended for persistent production data.
+The setup link is signed and expires after 30 minutes. The dashboard checks that the Telegram user who opened the link is still a group/channel administrator before allowing changes.
 
-## Features
-- Moderation: ban, kick, mute, warn
-- Welcome and goodbye messages
-- Locks system
-- Notes system
-- Utility commands
+## Button dashboard
+- 🛡 Moderation — ban, kick, mute, warn, pin and delete helpers
+- 🔒 Locks — links, photos, videos, stickers, GIFs, forwards, bots and text
+- 👋 Welcome — enable/disable and customize welcome/goodbye messages
+- 📜 Rules — edit and view group rules
+- 📝 Notes — save, get, list and clear notes
+- 🧰 Utilities — ID, info, ping and stats
+- ⚙️ Group Setup — browser dashboard for per-group/channel configuration
+- 👑 Bot Admin — persistent global bot-admin management for the owner
+
+## Admin controls
+The owner can use:
+```text
+/admin
+/addadmin USER_ID
+/deladmin USER_ID
+```
+
+Global bot admins can open `/admin` and view bot statistics or the admin list. Group-level tools also verify Telegram administrator status before setup/moderation actions are used.
 
 ## Local setup
 ```bash
@@ -27,12 +45,12 @@ python bot.py
 ## Docker
 ```bash
 docker build -t roseclone .
-docker run --env-file .env roseclone
+docker run --env-file .env -p 8080:8080 roseclone
 ```
 
 ## BotFather
 - Create the bot with `/newbot`
 - Disable privacy with `/setprivacy` when the bot needs group messages
-- Add the bot to your group and give it the required admin permissions
+- Add the bot to the target group/channel and give it the permissions required for moderation
 
-Variables for welcome/goodbye/rules text: `{name}`, `{group}`.
+Welcome/goodbye/rules text supports `{name}` and `{group}` placeholders in the existing handlers.
