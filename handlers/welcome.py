@@ -4,6 +4,7 @@ from aiogram.types import ChatMemberUpdated, Message
 
 from database.models import Group
 from database.session import async_session
+from utils.permissions import is_chat_admin
 
 router = Router()
 
@@ -25,42 +26,31 @@ async def on_member_update(event: ChatMemberUpdated):
     new_status = event.new_chat_member.status
     user = event.new_chat_member.user
     chat = event.chat
-
     if old_status in ("left", "kicked") and new_status == "member":
         async with async_session() as session:
             group = await session.get(Group, chat.id)
-            if not group or not group.welcome_enabled:
-                return
+            if not group or not group.welcome_enabled: return
             template = group.welcome_text or "👋 Welcome {name} to {group}!"
-        text = template.replace("{name}", user.full_name).replace("{group}", chat.title or "the group")
-        try:
-            await event.bot.send_message(chat.id, text)
-        except Exception:
-            pass
+        try: await event.bot.send_message(chat.id, template.replace("{name}", user.full_name).replace("{group}", chat.title or "the group"))
+        except Exception: pass
     elif old_status == "member" and new_status in ("left", "kicked"):
         async with async_session() as session:
             group = await session.get(Group, chat.id)
-            if not group or not group.goodbye_enabled or not group.goodbye_text:
-                return
+            if not group or not group.goodbye_enabled or not group.goodbye_text: return
             template = group.goodbye_text
-        text = template.replace("{name}", user.full_name).replace("{group}", chat.title or "the group")
-        try:
-            await event.bot.send_message(chat.id, text)
-        except Exception:
-            pass
+        try: await event.bot.send_message(chat.id, template.replace("{name}", user.full_name).replace("{group}", chat.title or "the group"))
+        except Exception: pass
 
 
 @router.message(Command("setwelcome"))
 async def setwelcome_cmd(message: Message):
+    if not await is_chat_admin(message): return await message.reply("⛔ Sirf Telegram admin welcome change kar sakta hai.")
     if not message.reply_to_message or not message.reply_to_message.text:
         return await message.reply("❌ Kisi text message pe reply karke /setwelcome karo.\n\nVariables: {name}, {group}")
     async with async_session() as session:
         group = await session.get(Group, message.chat.id)
-        if not group:
-            group = Group(id=message.chat.id, title=message.chat.title or "")
-            session.add(group)
-        group.welcome_text = message.reply_to_message.text
-        group.welcome_enabled = True
+        if not group: group = Group(id=message.chat.id, title=message.chat.title or ""); session.add(group)
+        group.welcome_text = message.reply_to_message.text; group.welcome_enabled = True
         await session.commit()
     await message.reply("✅ Welcome message set ho gaya.")
 
@@ -69,24 +59,19 @@ async def setwelcome_cmd(message: Message):
 async def welcome_cmd(message: Message):
     async with async_session() as session:
         group = await session.get(Group, message.chat.id)
-        if not group or not group.welcome_text:
-            return await message.reply("❌ Koi welcome message set nahi hai.")
-        enabled = group.welcome_enabled
-        text = group.welcome_text
+        if not group or not group.welcome_text: return await message.reply("❌ Koi welcome message set nahi hai.")
+        enabled, text = group.welcome_enabled, group.welcome_text
     await message.reply(f"<b>Welcome ({'ON' if enabled else 'OFF'}):</b>\n\n{text}")
 
 
 @router.message(Command("setgoodbye"))
 async def setgoodbye_cmd(message: Message):
-    if not message.reply_to_message or not message.reply_to_message.text:
-        return await message.reply("❌ Kisi text message pe reply karke /setgoodbye karo.")
+    if not await is_chat_admin(message): return await message.reply("⛔ Sirf Telegram admin goodbye change kar sakta hai.")
+    if not message.reply_to_message or not message.reply_to_message.text: return await message.reply("❌ Kisi text message pe reply karke /setgoodbye karo.")
     async with async_session() as session:
         group = await session.get(Group, message.chat.id)
-        if not group:
-            group = Group(id=message.chat.id, title=message.chat.title or "")
-            session.add(group)
-        group.goodbye_text = message.reply_to_message.text
-        group.goodbye_enabled = True
+        if not group: group = Group(id=message.chat.id, title=message.chat.title or ""); session.add(group)
+        group.goodbye_text = message.reply_to_message.text; group.goodbye_enabled = True
         await session.commit()
     await message.reply("✅ Goodbye message set ho gaya.")
 
@@ -95,21 +80,18 @@ async def setgoodbye_cmd(message: Message):
 async def goodbye_cmd(message: Message):
     async with async_session() as session:
         group = await session.get(Group, message.chat.id)
-        if not group or not group.goodbye_text:
-            return await message.reply("❌ Koi goodbye message set nahi hai.")
+        if not group or not group.goodbye_text: return await message.reply("❌ Koi goodbye message set nahi hai.")
         text = group.goodbye_text
     await message.reply(f"<b>Goodbye:</b>\n\n{text}")
 
 
 @router.message(Command("setrules"))
 async def setrules_cmd(message: Message):
-    if not message.reply_to_message or not message.reply_to_message.text:
-        return await message.reply("❌ Kisi text message pe reply karke /setrules karo.")
+    if not await is_chat_admin(message): return await message.reply("⛔ Sirf Telegram admin rules change kar sakta hai.")
+    if not message.reply_to_message or not message.reply_to_message.text: return await message.reply("❌ Kisi text message pe reply karke /setrules karo.")
     async with async_session() as session:
         group = await session.get(Group, message.chat.id)
-        if not group:
-            group = Group(id=message.chat.id, title=message.chat.title or "")
-            session.add(group)
+        if not group: group = Group(id=message.chat.id, title=message.chat.title or ""); session.add(group)
         group.rules = message.reply_to_message.text
         await session.commit()
     await message.reply("✅ Rules set ho gaye.")
@@ -119,7 +101,6 @@ async def setrules_cmd(message: Message):
 async def rules_cmd(message: Message):
     async with async_session() as session:
         group = await session.get(Group, message.chat.id)
-        if not group or not group.rules:
-            return await message.reply("❌ Koi rules set nahi hai.")
+        if not group or not group.rules: return await message.reply("❌ Koi rules set nahi hai.")
         rules = group.rules
     await message.reply(f"📜 <b>Group Rules:</b>\n\n{rules}")
