@@ -28,6 +28,14 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(String(255), default="")
 
 
+class BotAdmin(Base):
+    __tablename__ = "bot_admins"
+    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    username: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    added_by: Mapped[int] = mapped_column(BigInteger)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class Warning(Base):
     __tablename__ = "warnings"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
