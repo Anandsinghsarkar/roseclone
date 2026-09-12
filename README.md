@@ -1,4 +1,4 @@
-# Rose Clone Bot
+# Anonymouse Bot
 
 Telegram group/channel management bot built with aiogram 3.x, SQLAlchemy async and a FastAPI setup dashboard.
 
@@ -9,31 +9,37 @@ Telegram group/channel management bot built with aiogram 3.x, SQLAlchemy async a
    - `BOT_TOKEN` — Telegram BotFather token
    - `BOT_OWNER_ID` — your Telegram numeric user ID
    - `SETUP_TOKEN_SECRET` — long random secret
-   - `WEB_APP_URL` — the public HTTPS URL of this Railway service, e.g. `https://your-app.up.railway.app`
-4. For production persistence, add Railway PostgreSQL and set `DATABASE_URL` to its connection string.
-5. Deploy. Open the bot in Telegram, add it to a group, give it admin rights, then run `/setup` or use the **⚙️ Group Setup** button.
+   - `WEB_APP_URL` — the public HTTPS URL of this Railway service
+   - `DATABASE_URL` — Railway PostgreSQL connection string for persistent production data
+4. Deploy. Add Anonymouse to your group and give it the required admin permissions.
 
-The setup link is signed and expires after 30 minutes. The dashboard checks that the Telegram user who opened the link is still a group/channel administrator before allowing changes.
+## Anonymouse features
+- 🛡 Button-based moderation: ban, unban, kick, mute, unmute, warn, pin, delete
+- 🔒 Lock enforcement: text, links, photos, videos, stickers, GIFs, forwards, bots, audio, voice, documents
+- ⚠️ Locked content is deleted and automatically generates a warning
+- 🔇 Configurable warning threshold and mute duration from **Anonymouse Admin → Warning Policy**
+- 👮 Group admin list plus `/promote @username` and `/demote @username`
+- 👋 Welcome/goodbye messages with `{name}` and `{group}` placeholders
+- 📜 Rules
+- 📝 Notes
+- 🧰 Utilities
+- ⌨️ Custom commands: group admins can create `/addcmd name response` and remove them with `/delcmd name`
+- ⚙️ Secure web setup panel for per-group settings
+- 👑 Persistent global bot-admin system
 
-## Button dashboard
-- 🛡 Moderation — ban, kick, mute, warn, pin and delete helpers
-- 🔒 Locks — links, photos, videos, stickers, GIFs, forwards, bots and text
-- 👋 Welcome — enable/disable and customize welcome/goodbye messages
-- 📜 Rules — edit and view group rules
-- 📝 Notes — save, get, list and clear notes
-- 🧰 Utilities — ID, info, ping and stats
-- ⚙️ Group Setup — browser dashboard for per-group/channel configuration
-- 👑 Bot Admin — persistent global bot-admin management for the owner
+## Warning and lock behavior
+Example: set `links` or `photos` as locked. A non-admin posting that content will have the message removed and receive a warning. When the configured warning threshold is reached, Anonymouse mutes the user for the configured duration. The warning counter can reset automatically after the mute.
 
-## Admin controls
-The owner can use:
+## Setup panel
+Run `/setup` inside your group, or use the **⚙️ Setup Panel** button. The setup URL is signed, expires after 30 minutes, and re-checks Telegram administrator status before saving changes.
+
+## Bot admin
 ```text
 /admin
 /addadmin USER_ID
 /deladmin USER_ID
 ```
-
-Global bot admins can open `/admin` and view bot statistics or the admin list. Group-level tools also verify Telegram administrator status before setup/moderation actions are used.
+Only the configured `BOT_OWNER_ID` can add/remove global bot admins.
 
 ## Local setup
 ```bash
@@ -44,13 +50,6 @@ python bot.py
 
 ## Docker
 ```bash
-docker build -t roseclone .
-docker run --env-file .env -p 8080:8080 roseclone
+docker build -t anonymouse .
+docker run --env-file .env -p 8080:8080 anonymouse
 ```
-
-## BotFather
-- Create the bot with `/newbot`
-- Disable privacy with `/setprivacy` when the bot needs group messages
-- Add the bot to the target group/channel and give it the permissions required for moderation
-
-Welcome/goodbye/rules text supports `{name}` and `{group}` placeholders in the existing handlers.
