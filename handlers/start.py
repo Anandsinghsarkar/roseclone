@@ -3,7 +3,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from config import settings
-from utils.permissions import is_bot_admin, is_chat_admin
+from utils.permissions import is_bot_admin, is_chat_admin, is_chat_admin_id
 from utils.setup import build_setup_url
 
 router = Router()
@@ -29,10 +29,6 @@ async def start_cmd(message: Message):
         "Group me add karke <b>⚙️ Group Setup</b> se web dashboard kholo.\n\n"
         f"<b>Owner ID:</b> <code>{settings.BOT_OWNER_ID}</code>"
     )
-    if message.chat.type in {"group", "supergroup"}:
-        text += "\n\n👇 Group menu:" 
-    else:
-        text += "\n\n👇 Demo/help menu:"
     await message.answer(text, reply_markup=main_kb(message.chat.type in {"group", "supergroup"}))
 
 
@@ -56,7 +52,7 @@ async def setup_cmd(message: Message):
 async def setup_cb(callback):
     if callback.message.chat.type not in {"group", "supergroup"}:
         return await callback.answer("Setup button group ke andar use karo.", show_alert=True)
-    if not await is_chat_admin(callback.message):
+    if not await is_chat_admin_id(callback.bot, callback.message.chat.id, callback.from_user.id):
         return await callback.answer("Sirf group admin setup kar sakta hai.", show_alert=True)
     url = build_setup_url(callback.message.chat.id, callback.from_user.id)
     await callback.message.answer("⚙️ <b>Group Setup Panel</b>\n\nWelcome, goodbye, rules, limits aur locks browser me manage karo. Link 30 minutes me expire hoga.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Open Setup Panel", url=url)]]))
@@ -78,10 +74,8 @@ MENU_TEXT = {
 @router.callback_query(lambda c: c.data in MENU_TEXT)
 async def menu_section(callback):
     if callback.data == "menu:moderation" and callback.message.chat.type in {"group", "supergroup"}:
-        if not await is_chat_admin(callback.message):
+        if not await is_chat_admin_id(callback.bot, callback.message.chat.id, callback.from_user.id):
             return await callback.answer("Moderation tools sirf admins use kar sakte hain.", show_alert=True)
-    if callback.data in {"menu:setup"}:
-        return
     await callback.message.answer(MENU_TEXT[callback.data], reply_markup=main_kb(callback.message.chat.type in {"group", "supergroup"}))
     await callback.answer()
 
