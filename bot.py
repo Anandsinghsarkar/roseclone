@@ -12,6 +12,7 @@ from database.session import init_db
 from handlers import admin, start, moderation, welcome, locks, notes, utilities, custom_commands
 from middlewares.lock_enforcement import LockEnforcementMiddleware
 from middlewares.throttling import ThrottlingMiddleware
+from middlewares.anti_abuse import AntiAbuseMiddleware
 from web.app import build_app
 
 logging.basicConfig(
@@ -35,6 +36,7 @@ async def main():
 
     bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
+    dp.message.middleware(AntiAbuseMiddleware())
     dp.message.middleware(LockEnforcementMiddleware())
     dp.message.middleware(ThrottlingMiddleware(rate_limit=1.0))
 

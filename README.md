@@ -1,45 +1,44 @@
 # Anonymouse Bot
 
-Telegram group/channel management bot built with aiogram 3.x, SQLAlchemy async and a FastAPI setup dashboard.
+Telegram group-management bot built with aiogram 3.x, SQLAlchemy async and FastAPI.
 
-## Railway deployment
-1. Create a Railway service from this GitHub repository.
-2. Railway builds the included `Dockerfile` and starts `python bot.py`.
-3. Add these Railway Variables:
-   - `BOT_TOKEN` — Telegram BotFather token
-   - `BOT_OWNER_ID` — your Telegram numeric user ID
-   - `SETUP_TOKEN_SECRET` — long random secret
-   - `WEB_APP_URL` — the public HTTPS URL of this Railway service
-   - `DATABASE_URL` — Railway PostgreSQL connection string for persistent production data
-4. Deploy. Add Anonymouse to your group and give it the required admin permissions.
+## Deploy
+1. Create a Railway service from this repository.
+2. Add `BOT_TOKEN`, `BOT_OWNER_ID`, `SETUP_TOKEN_SECRET`, `WEB_APP_URL`, and a persistent PostgreSQL `DATABASE_URL`.
+3. Deploy and promote the bot to group admin with message delete and restrict-member permissions.
 
-## Anonymouse features
-- 🛡 Button-based moderation: ban, unban, kick, mute, unmute, warn, pin, delete
-- 🔒 Lock enforcement: text, links, photos, videos, stickers, GIFs, forwards, bots, audio, voice, documents
-- ⚠️ Locked content is deleted and automatically generates a warning
-- 🔇 Configurable warning threshold and mute duration from **Anonymouse Admin → Warning Policy**
-- 👮 Group admin list plus `/promote @username` and `/demote @username`
-- 👋 Welcome/goodbye messages with `{name}` and `{group}` placeholders
-- 📜 Rules
-- 📝 Notes
-- 🧰 Utilities
-- ⌨️ Custom commands: group admins can create `/addcmd name response` and remove them with `/delcmd name`
-- ⚙️ Secure web setup panel for per-group settings
-- 👑 Persistent global bot-admin system
+## Existing features
+- Moderation: ban, unban, kick, mute, unmute, warn, remove warning, pin and delete.
+- Locks: text, links, photos, videos, stickers, GIFs, forwards, bots, audio, voice and documents.
+- Warning threshold and automatic mute policy.
+- Welcome/goodbye, rules, notes, custom commands, admin management and signed web setup panel.
 
-## Warning and lock behavior
-Example: set `links` or `photos` as locked. A non-admin posting that content will have the message removed and receive a warning. When the configured warning threshold is reached, Anonymouse mutes the user for the configured duration. The warning counter can reset automatically after the mute.
+## Advanced Group Suite (new)
+- Per-group keyword auto replies: `/addfilter keyword response`, `/delfilter keyword`, `/filters`.
+- Anti-flood protection using each group's configured flood limit.
+- Duplicate-message suppression.
+- `/afk [reason]` status command (in-memory; resets when bot restarts).
+- `/report [reason]` by replying to a message (admins need to have started the bot to receive DMs).
+- `/purge` by replying to the first message; deletes up to 100 messages.
+- Database-backed aggregate `/stats` and `/groupstats`.
+- New `group_filters` and `admin_actions` tables are created on startup; existing data is preserved.
 
-## Setup panel
-Run `/setup` inside your group, or use the **⚙️ Setup Panel** button. The setup URL is signed, expires after 30 minutes, and re-checks Telegram administrator status before saving changes.
-
-## Bot admin
-```text
-/admin
-/addadmin USER_ID
-/deladmin USER_ID
+## Commands
 ```
-Only the configured `BOT_OWNER_ID` can add/remove global bot admins.
+/admin /addadmin USER_ID /deladmin USER_ID
+/ban /unban /kick /mute /unmute /warn /warns /rmwarn
+/lock TYPE /unlock TYPE /locks
+/setwelcome /welcome /setgoodbye /goodbye /setrules /rules
+/save /get /notes /clear
+/addcmd NAME RESPONSE /delcmd NAME
+/addfilter KEYWORD RESPONSE /delfilter KEYWORD /filters
+/afk [reason] /report [reason] /purge /groupstats /stats /ping /id /info /admins
+```
+
+## Notes
+- Anti-flood and duplicate caches are process-local and reset on restart; they are not shared between multiple bot replicas.
+- Telegram permissions and privacy settings affect what the bot can see and moderate.
+- The setup dashboard uses signed, expiring setup tokens and re-checks group-admin status.
 
 ## Local setup
 ```bash

@@ -78,3 +78,24 @@ class CustomCommand(Base):
     response: Mapped[str] = mapped_column(Text)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     created_by: Mapped[int] = mapped_column(BigInteger)
+
+
+class GroupFilter(Base):
+    __tablename__ = "group_filters"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    group_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("groups.id"), index=True)
+    trigger: Mapped[str] = mapped_column(String(64), index=True)
+    response: Mapped[str] = mapped_column(Text)
+    created_by: Mapped[int] = mapped_column(BigInteger)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class AdminAction(Base):
+    __tablename__ = "admin_actions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    group_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    actor_id: Mapped[int] = mapped_column(BigInteger)
+    target_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    action: Mapped[str] = mapped_column(String(64))
+    details: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
