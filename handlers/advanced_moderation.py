@@ -12,7 +12,7 @@ from utils.permissions import is_chat_admin
 
 router = Router()
 
-_DURATION = re.compile(r"^(\\d+)([mhd])$", re.IGNORECASE)
+_DURATION = re.compile(r"^(\d+)([mhd])$", re.IGNORECASE)
 
 
 def parse_duration(value: str):
