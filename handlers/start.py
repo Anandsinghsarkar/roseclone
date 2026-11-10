@@ -75,7 +75,8 @@ MENU_TEXT = {
     "menu:notes": "📝 <b>Notes</b>\n/save name → reply\n/get name • /notes • /clear name",
     "menu:admins": "👮 <b>Group Admins</b>\n/admins list dekho. Group admin: <code>/promote @username</code> aur <code>/demote @username</code>.",
     "menu:custom": "⌨️ <b>Custom Commands</b>\nGroup admin: <code>/addcmd hello Hello {name}</code>\nDelete: <code>/delcmd hello</code>",
-    "menu:utilities": "🧰 <b>Utilities</b>\n/id • /info • /ping • /stats",
+    "menu:filters": "🎯 <b>Custom Filters</b>\n/addfilter keyword response\n/delfilter keyword\n/filters\nGroup admins can create keyword-based auto replies.",
+    "menu:utilities": "🧰 <b>Utilities</b>\n/id • /info • /ping • /stats • /groupstats • /afk • /report • /purge",
     "menu:help": "❓ <b>Help</b>\nAnonymouse ko group admin banao. Locked content ko bot delete karega, warning dega aur policy ke hisaab se mute karega.",
 }
 
