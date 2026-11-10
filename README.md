@@ -28,11 +28,11 @@ SQLite lives in the service filesystem. Railway's ordinary container filesystem 
 
 ## Group control and member identity
 - Welcome/goodbye templates support `{name}`, `{username}`, `{mention}`, `{id}`, and `{group}`; the member's current Telegram profile photo is attached when available.
-- `/mygroups` lists groups recorded by the bot where it is currently an admin (bot admins only).
+- `/mygroups` lists groups recorded by the bot where it is currently an admin (bot admins only). `/knownusers` and `/knownbots` show up to 40 users/bots the bot has actually seen in the current group.
 - `/groupinfo` shows current group details; `/groupadmins` lists Telegram admins and bots when Telegram returns them.
 - `/setgrouptitle New title` changes the group title; reply to a photo with `/setgroupphoto` to change the group image.
 - Reply to a member with `/promoterights delete=on ban=off invite=on pin=off changeinfo=off promote=off` to assign a limited admin-rights set. `/demoteuser` removes admin rights where Telegram permits.
-- Telegram Bot API does not provide a general method to enumerate every group member. The bot can inspect admins/bots and users it has encountered, and can manage a target user when it has their ID or a replied message.
+- Telegram Bot API does not provide a general method to enumerate every group member. `/knownusers` and `/knownbots` are only observed-user lists, not complete live membership lists. The bot can manage a target user when it has their ID or a replied message.
 - Group title/photo and admin-right changes require the bot to have the corresponding Telegram admin permissions. The bot cannot override the group owner's authority.
 
 ## Advanced Group Suite
@@ -55,7 +55,7 @@ SQLite lives in the service filesystem. Railway's ordinary container filesystem 
 /addfilter KEYWORD RESPONSE /delfilter KEYWORD /filters
 /afk [reason] /report [reason] /purge /groupstats /stats /ping /id /info /admins
 /tban DURATION [reason] /tmute DURATION [reason] /logs
-/captcha on|off /antiraid on|off\n/mygroups /groupinfo /groupadmins /setgrouptitle TITLE /setgroupphoto\n/promoterights delete=on ban=off invite=on pin=off changeinfo=off promote=off /demoteuser
+/captcha on|off /antiraid on|off\n/mygroups /groupinfo /groupadmins /knownusers /knownbots /setgrouptitle TITLE /setgroupphoto\n/promoterights delete=on ban=off invite=on pin=off changeinfo=off promote=off /demoteuser
 ```
 
 ## Local setup
