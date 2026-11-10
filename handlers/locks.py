@@ -15,7 +15,7 @@ async def lock_cmd(message: Message):
     if not await is_chat_admin(message): return await message.reply("⛔ Sirf Telegram admin locks change kar sakta hai.")
     args = message.text.split(maxsplit=1)
     if len(args) < 2:
-        return await message.reply("Usage: <code>/lock &lt;type&gt;</code>\nTypes: text, links, photos, videos, stickers, gifs, forwards, bots")
+        return await message.reply("Usage: <code>/lock &lt;type&gt;</code>\nTypes: text, links, photos, videos, stickers, gifs, forwards, bots, audio, voice, documents, video_notes, contacts, locations, polls, dice, games")
     lock_type = args[1].lower().strip()
     async with async_session() as session:
         stmt = select(Lock).where(Lock.group_id == message.chat.id, Lock.lock_type == lock_type)
