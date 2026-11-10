@@ -17,7 +17,9 @@ Telegram group-management bot built with aiogram 3.x, SQLAlchemy async and FastA
 - Per-group keyword auto replies: `/addfilter keyword response`, `/delfilter keyword`, `/filters`.
 - Anti-flood protection using each group's configured flood limit.
 - Duplicate-message suppression.
-- `/afk [reason]` status command (in-memory; resets when bot restarts).\n- `/tban 30m|2h|7d [reason]` and `/tmute 30m|2h|7d [reason]` by replying to a member; Telegram automatically expires the restriction.\n- `/logs` shows the latest 15 recorded actions from the new audit log table.
+- `/afk [reason]` status command (in-memory; resets when bot restarts).
+- `/tban 30m|2h|7d [reason]` and `/tmute 30m|2h|7d [reason]` by replying to a member; Telegram automatically expires the restriction.
+- `/logs` shows the latest 15 recorded actions from the new audit log table.
 - `/report [reason]` by replying to a message (admins need to have started the bot to receive DMs).
 - `/purge` by replying to the first message; deletes up to 100 messages.
 - Database-backed aggregate `/stats` and `/groupstats`.
@@ -32,7 +34,8 @@ Telegram group-management bot built with aiogram 3.x, SQLAlchemy async and FastA
 /save /get /notes /clear
 /addcmd NAME RESPONSE /delcmd NAME
 /addfilter KEYWORD RESPONSE /delfilter KEYWORD /filters
-/afk [reason] /report [reason] /purge /groupstats /stats /ping /id /info /admins\n/tban DURATION [reason] /tmute DURATION [reason] /logs
+/afk [reason] /report [reason] /purge /groupstats /stats /ping /id /info /admins
+/tban DURATION [reason] /tmute DURATION [reason] /logs
 ```
 
 ## Notes
