@@ -7,13 +7,13 @@ from database.models import User, Warning, AdminAction
 from database.session import async_session
 from utils.permissions import is_chat_admin
 
+router = Router()
+
 
 async def log_admin_action(message: Message, target_id: int | None, action: str, details: str = ""):
     async with async_session() as session:
         session.add(AdminAction(group_id=message.chat.id, actor_id=message.from_user.id, target_id=target_id, action=action, details=details[:1000]))
         await session.commit()
-
-router = Router()
 
 
 async def admin_only(message: Message) -> bool:
@@ -113,9 +113,7 @@ async def warn_cmd(message: Message):
         stmt = select(Warning).where(Warning.group_id == message.chat.id, Warning.user_id == user.id)
         warns = (await session.execute(stmt)).scalars().all()
     await log_admin_action(message, user.id, "warn", reason)
-    await log_admin_action(message, user.id, "warn", reason)
-    await message.reply(f"⚠️ {user.full_name} ko warning di. Total: {len(warns)}
-Reason: {reason}")
+    await message.reply(f"⚠️ {user.full_name} ko warning di. Total: {len(warns)}\nReason: {reason}")
 
 
 @router.message(Command("warns"))
@@ -127,11 +125,8 @@ async def warns_cmd(message: Message):
         warns = (await session.execute(stmt)).scalars().all()
     if not warns:
         return await message.reply(f"✅ {user.full_name} ke paas koi warning nahi hai.")
-    text = f"⚠️ <b>{user.full_name}</b> ki warnings ({len(warns)}):
-
-"
-    for i, w in enumerate(warns, 1): text += f"{i}. {w.reason} — {w.created_at.strftime('%Y-%m-%d')}
-"
+    text = f"⚠️ <b>{user.full_name}</b> ki warnings ({len(warns)}):\n\n"
+    for i, w in enumerate(warns, 1): text += f"{i}. {w.reason} — {w.created_at.strftime('%Y-%m-%d')}\n"
     await message.reply(text)
 
 
