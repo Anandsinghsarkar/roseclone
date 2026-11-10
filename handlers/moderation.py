@@ -3,9 +3,9 @@ from aiogram.filters import Command
 from aiogram.types import ChatPermissions, Message
 from sqlalchemy import select
 
-from database.models import User, Warning
+from database.models import User, Warning, AdminAction
 from database.session import async_session
-from utils.permissions import is_chat_admin
+from utils.permissions import is_chat_admin\n\n\nasync def log_admin_action(message: Message, target_id: int | None, action: str, details: str = \"\"):\n    async with async_session() as session:\n        session.add(AdminAction(group_id=message.chat.id, actor_id=message.from_user.id, target_id=target_id, action=action, details=details[:1000]))\n        await session.commit()
 
 router = Router()
 
@@ -101,7 +101,7 @@ async def warn_cmd(message: Message):
         await session.commit()
         stmt = select(Warning).where(Warning.group_id == message.chat.id, Warning.user_id == user.id)
         warns = (await session.execute(stmt)).scalars().all()
-    await message.reply(f"⚠️ {user.full_name} ko warning di. Total: {len(warns)}\nReason: {reason}")
+    await log_admin_action(message, user.id, "warn", reason)\n    await message.reply(f"⚠️ {user.full_name} ko warning di. Total: {len(warns)}\nReason: {reason}")
 
 
 @router.message(Command("warns"))
