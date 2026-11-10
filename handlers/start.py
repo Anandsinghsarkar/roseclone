@@ -15,7 +15,8 @@ def main_kb(is_group=False, include_admin=False):
         [InlineKeyboardButton(text="⚠️ Warnings", callback_data="menu:warnings"), InlineKeyboardButton(text="👋 Welcome", callback_data="menu:welcome")],
         [InlineKeyboardButton(text="📜 Rules", callback_data="menu:rules"), InlineKeyboardButton(text="📝 Notes", callback_data="menu:notes")],
         [InlineKeyboardButton(text="👮 Admins", callback_data="menu:admins"), InlineKeyboardButton(text="⌨️ Commands", callback_data="menu:custom")],
-        [InlineKeyboardButton(text="🧰 Utilities", callback_data="menu:utilities"), InlineKeyboardButton(text="⚙️ Setup Panel", callback_data="menu:setup")],
+        [InlineKeyboardButton(text="🎯 Filters", callback_data="menu:filters"), InlineKeyboardButton(text="🧰 Utilities", callback_data="menu:utilities")],
+        [InlineKeyboardButton(text="⚙️ Setup Panel", callback_data="menu:setup")],
     ]
     if include_admin:
         rows.append([InlineKeyboardButton(text="👑 Anonymouse Admin", callback_data="open_admin")])
@@ -81,7 +82,7 @@ MENU_TEXT = {
 
 @router.callback_query(lambda c: c.data in MENU_TEXT)
 async def menu_section(callback):
-    if callback.data in {"menu:moderation", "menu:locks", "menu:warnings", "menu:admins", "menu:custom"} and callback.message.chat.type in {"group", "supergroup"}:
+    if callback.data in {"menu:moderation", "menu:locks", "menu:warnings", "menu:admins", "menu:custom", "menu:filters"} and callback.message.chat.type in {"group", "supergroup"}:
         if not await is_chat_admin_id(callback.bot, callback.message.chat.id, callback.from_user.id):
             return await callback.answer("Ye tools sirf group admins ke liye hain.", show_alert=True)
     await callback.message.answer(MENU_TEXT[callback.data], reply_markup=main_kb(callback.message.chat.type in {"group", "supergroup"}, await is_bot_admin(callback.from_user.id)))
