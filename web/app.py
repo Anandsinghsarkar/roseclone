@@ -9,6 +9,7 @@ from config import settings
 from database.models import Group, Lock
 from database.session import async_session
 from utils.setup import verify_setup_token
+from web.backup import register_backup_routes
 
 
 class SetupPayload(BaseModel):
@@ -37,7 +38,7 @@ DASHBOARD = r'''<!doctype html>
 .wrap{max-width:980px;margin:auto;padding:28px 16px 60px}.hero{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:20px}.title{font-size:30px;font-weight:800}.sub{color:var(--muted);margin-top:6px}.badge{padding:9px 13px;border:1px solid var(--line);border-radius:999px;background:#0e1422;color:#b7c3dc}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}.card{background:rgba(18,24,39,.92);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 16px 50px rgba(0,0,0,.24)}h2{font-size:17px;margin:0 0 14px}.row{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:10px 0}.row label{color:#d6dcef}.stack{display:grid;gap:9px}input,textarea{width:100%;background:#0c1120;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px 12px;outline:none}textarea{min-height:110px;resize:vertical}.switch{position:relative;width:48px;height:26px}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;background:#34405a;border-radius:999px;cursor:pointer}.slider:before{content:"";position:absolute;height:20px;width:20px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s}.switch input:checked + .slider{background:var(--good)}.switch input:checked + .slider:before{transform:translateX(22px)}button{border:0;border-radius:12px;padding:11px 15px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff}.muted{color:var(--muted);font-size:13px}.actions{display:flex;gap:10px;flex-wrap:wrap}.lock{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;border:1px solid var(--line);border-radius:12px}.toast{position:fixed;right:18px;bottom:18px;background:#18223a;border:1px solid var(--line);padding:12px 15px;border-radius:12px;display:none}.full{grid-column:1/-1}
 </style></head>
-<body><div class="wrap"><div class="hero"><div><div class="title">👻 Anonymouse Setup</div><div class="sub" id="chatLabel">Loading…</div></div><div class="badge">Admin Panel</div></div>
+<body><div class="wrap"><div class="hero"><div><div class="title">👻 Anonymouse Setup</div><div class="sub" id="chatLabel">Loading…</div></div><div class="actions"><a class="badge" href="/backup" style="text-decoration:none">🗄️ Data Backup</a><div class="badge">Admin Panel</div></div></div>
 <div class="grid"><section class="card"><h2>👋 Welcome</h2><div class="row"><label>Enable welcome</label><label class="switch"><input id="welcome_enabled" type="checkbox"><span class="slider"></span></label></div><div class="stack"><input id="welcome_text" placeholder="Welcome {name} to {group}"></div><p class="muted">Use {name} for the user's name and {group} for the chat title.</p></section>
 <section class="card"><h2>🚪 Goodbye</h2><div class="row"><label>Enable goodbye</label><label class="switch"><input id="goodbye_enabled" type="checkbox"><span class="slider"></span></label></div><div class="stack"><input id="goodbye_text" placeholder="Goodbye {name}"></div></section>
 <section class="card"><h2>⚠️ Moderation</h2><div class="stack"><label class="muted">Flood limit</label><input id="flood_limit" type="number" min="1" max="50"><label class="muted">Warning threshold (auto mute)</label><input id="warn_limit" type="number" min="1" max="20"></div><p class="muted">Mute duration can be changed from Anonymouse → Admin → Warning Policy buttons.</p></section>
@@ -69,6 +70,7 @@ async def _is_admin(bot, chat_id: int, user_id: int) -> bool:
 
 def build_app(bot) -> FastAPI:
     app = FastAPI(title="Anonymouse Setup", docs_url=None, redoc_url=None)
+    register_backup_routes(app)
 
     @app.get("/health")
     async def health():
