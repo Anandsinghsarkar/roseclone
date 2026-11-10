@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from sqlalchemy import delete, select
 
-from database.models import CustomCommand
+from database.models import CustomCommand, GroupFilter
 from database.session import async_session
 from utils.permissions import is_chat_admin
 
@@ -49,7 +49,18 @@ async def delcmd(message: Message):
 
 @router.message()
 async def custom_command_router(message: Message):
-    if message.chat.type not in {"group", "supergroup"} or not message.text or not message.text.startswith("/"):
+    if message.chat.type not in {"group", "supergroup"} or not message.text:
+        return
+    if not message.text.startswith("/"):
+        if not message.from_user or await is_chat_admin(message):
+            return
+        async with async_session() as session:
+            filters = (await session.execute(select(GroupFilter).where(GroupFilter.group_id == message.chat.id, GroupFilter.enabled.is_(True)))).scalars().all()
+        body = message.text.casefold()
+        for item in filters:
+            if item.trigger.casefold() in body:
+                await message.answer(item.response.replace("{name}", message.from_user.full_name).replace("{group}", message.chat.title or "group"))
+                break
         return
     command = message.text.split()[0].split("@")[0].lstrip("/").lower()
     if command in {"start", "menu", "setup", "panel", "admin", "addadmin", "deladmin", "promote", "demote", "addcmd", "delcmd", "ban", "unban", "kick", "mute", "unmute", "warn", "warns", "rmwarn", "pin", "del", "lock", "unlock", "locks", "save", "get", "notes", "clear", "setwelcome", "welcome", "setgoodbye", "goodbye", "setrules", "rules", "id", "info", "ping", "stats", "admins"}:
