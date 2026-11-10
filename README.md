@@ -2,10 +2,23 @@
 
 Telegram group-management bot built with aiogram 3.x, SQLAlchemy async and FastAPI.
 
+## Database and backups (no PostgreSQL required)
+- The bot uses local SQLite at `data/bot.db`. No PostgreSQL service, Redis, or `DATABASE_URL` variable is needed.
+- Open `https://YOUR-RAILWAY-DOMAIN/backup` for the owner backup center.
+- Enter the strong `SETUP_TOKEN_SECRET` configured in Railway to authorize backup actions.
+- **Export:** download a consistent `.db` snapshot containing all bot database tables.
+- **Import:** upload a previously exported `.db`, `.sqlite`, or `.sqlite3` file. The file is integrity-checked and checked for expected bot tables. The current database is copied to a timestamped safety file before restore.
+- Restart the bot service after restoring.
+- Keep backup files private and never commit them to GitHub.
+
+### Important: persistent storage on Railway
+SQLite lives in the service filesystem. Railway's ordinary container filesystem can be reset on redeploy/restart. Attach a Railway Volume mounted at **`/app/data`** to keep the live database between deployments. Export backups regularly and keep copies outside the hosting service. Export/import is a recovery tool, not automatic cloud replication.
+
 ## Deploy
 1. Create a Railway service from this repository.
-2. Add `BOT_TOKEN`, `BOT_OWNER_ID`, `SETUP_TOKEN_SECRET`, `WEB_APP_URL`, and a persistent PostgreSQL `DATABASE_URL`.
-3. Deploy and promote the bot to group admin with message delete and restrict-member permissions.
+2. Add `BOT_TOKEN`, `BOT_OWNER_ID`, and a strong random `SETUP_TOKEN_SECRET`. Set `WEB_APP_URL` to your public Railway domain.
+3. Attach a persistent Railway Volume at `/app/data` if you want SQLite data to survive redeploys and restarts.
+4. Deploy and promote the bot to group admin with message delete and restrict-member permissions.
 
 ## Existing features
 - Moderation: ban, unban, kick, mute, unmute, warn, remove warning, pin and delete.
@@ -13,17 +26,14 @@ Telegram group-management bot built with aiogram 3.x, SQLAlchemy async and FastA
 - Warning threshold and automatic mute policy.
 - Welcome/goodbye, rules, notes, custom commands, admin management and signed web setup panel.
 
-## Advanced Group Suite (new)
+## Advanced Group Suite
 - Per-group keyword auto replies: `/addfilter keyword response`, `/delfilter keyword`, `/filters`.
-- Anti-flood protection using each group's configured flood limit.
-- Duplicate-message suppression.
-- `/afk [reason]` status command (in-memory; resets when bot restarts).
-- `/tban 30m|2h|7d [reason]` and `/tmute 30m|2h|7d [reason]` by replying to a member; Telegram automatically expires the restriction.
-- `/logs` shows the latest 15 recorded actions from the new audit log table.
-- `/report [reason]` by replying to a message (admins need to have started the bot to receive DMs).
-- `/purge` by replying to the first message; deletes up to 100 messages.
-- Database-backed aggregate `/stats` and `/groupstats`.
-- New `group_filters` and `admin_actions` tables are created on startup; existing data is preserved.
+- Anti-flood protection and duplicate-message suppression.
+- `/afk [reason]` (in-memory; resets when bot restarts).
+- `/tban 30m|2h|7d [reason]` and `/tmute 30m|2h|7d [reason]` by replying to a member.
+- `/logs` shows latest recorded admin actions.
+- `/report [reason]`, `/purge`, database-backed `/stats` and `/groupstats`.
+- CAPTCHA, anti-raid and join-request approval/decline buttons.
 
 ## Commands
 ```
@@ -32,16 +42,12 @@ Telegram group-management bot built with aiogram 3.x, SQLAlchemy async and FastA
 /lock TYPE /unlock TYPE /locks
 /setwelcome /welcome /setgoodbye /goodbye /setrules /rules
 /save /get /notes /clear
-/addcmd NAME RESPONSE /delcmd NAME
+/addcmd NAME RESPONSE
 /addfilter KEYWORD RESPONSE /delfilter KEYWORD /filters
 /afk [reason] /report [reason] /purge /groupstats /stats /ping /id /info /admins
 /tban DURATION [reason] /tmute DURATION [reason] /logs
+/captcha on|off /antiraid on|off
 ```
-
-## Notes
-- Anti-flood and duplicate caches are process-local and reset on restart; they are not shared between multiple bot replicas.
-- Telegram permissions and privacy settings affect what the bot can see and moderate.
-- The setup dashboard uses signed, expiring setup tokens and re-checks group-admin status.
 
 ## Local setup
 ```bash
@@ -53,12 +59,11 @@ python bot.py
 ## Docker
 ```bash
 docker build -t anonymouse .
-docker run --env-file .env -p 8080:8080 anonymouse
+docker run --env-file .env -p 8080:8080 -v anonymouse-data:/app/data anonymouse
 ```
 
-
-## Security and join protection
-- `/captcha on|off`: require new members to press their personal verification button before chatting. Bot needs permission to restrict members.
-- `/antiraid on|off`: five joins in 30 seconds trigger CAPTCHA for 10 minutes. Join-rate counters are process-local; active raid expiry is stored in the database.
-- Join requests appear in the group with admin-only Approve/Decline buttons. Bot needs permission to manage join requests.
-- Security settings and pending CAPTCHA challenges are stored in new database tables.
+## Notes
+- Anti-flood and duplicate caches are process-local and reset on restart.
+- Telegram permissions and privacy settings affect what the bot can see and moderate.
+- Setup links use signed, expiring tokens and re-check group-admin status.
+- CAPTCHA requires permission to restrict members; join-request controls require permission to manage join requests.
