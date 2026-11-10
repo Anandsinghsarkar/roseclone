@@ -55,3 +55,10 @@ python bot.py
 docker build -t anonymouse .
 docker run --env-file .env -p 8080:8080 anonymouse
 ```
+
+
+## Security and join protection
+- `/captcha on|off`: require new members to press their personal verification button before chatting. Bot needs permission to restrict members.
+- `/antiraid on|off`: five joins in 30 seconds trigger CAPTCHA for 10 minutes. Join-rate counters are process-local; active raid expiry is stored in the database.
+- Join requests appear in the group with admin-only Approve/Decline buttons. Bot needs permission to manage join requests.
+- Security settings and pending CAPTCHA challenges are stored in new database tables.
