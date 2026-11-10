@@ -99,3 +99,20 @@ class AdminAction(Base):
     action: Mapped[str] = mapped_column(String(64))
     details: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class GroupSecurity(Base):
+    __tablename__ = "group_security"
+    group_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    captcha_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    antiraid_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    join_threshold: Mapped[int] = mapped_column(Integer, default=5)
+    raid_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class CaptchaPending(Base):
+    __tablename__ = "captcha_pending"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    group_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

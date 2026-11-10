@@ -3,11 +3,17 @@ from aiogram.filters import Command
 from aiogram.types import ChatPermissions, Message
 from sqlalchemy import select
 
-from database.models import User, Warning
+from database.models import User, Warning, AdminAction
 from database.session import async_session
 from utils.permissions import is_chat_admin
 
 router = Router()
+
+
+async def log_admin_action(message: Message, target_id: int | None, action: str, details: str = ""):
+    async with async_session() as session:
+        session.add(AdminAction(group_id=message.chat.id, actor_id=message.from_user.id, target_id=target_id, action=action, details=details[:1000]))
+        await session.commit()
 
 
 async def admin_only(message: Message) -> bool:
@@ -31,6 +37,7 @@ async def ban_cmd(message: Message):
     if not user: return
     try:
         await message.chat.ban(user.id)
+        await log_admin_action(message, user.id, "ban")
         await message.reply(f"🚫 {user.full_name} ko ban kar diya gaya.")
     except Exception as e:
         await message.reply(f"❌ Error: {e}")
@@ -43,6 +50,7 @@ async def unban_cmd(message: Message):
     if not user: return
     try:
         await message.chat.unban(user.id)
+        await log_admin_action(message, user.id, "unban")
         await message.reply(f"✅ {user.full_name} ko unban kar diya gaya.")
     except Exception as e:
         await message.reply(f"❌ Error: {e}")
@@ -56,6 +64,7 @@ async def kick_cmd(message: Message):
     try:
         await message.chat.ban(user.id)
         await message.chat.unban(user.id)
+        await log_admin_action(message, user.id, "kick")
         await message.reply(f"👢 {user.full_name} ko kick kar diya gaya.")
     except Exception as e:
         await message.reply(f"❌ Error: {e}")
@@ -68,6 +77,7 @@ async def mute_cmd(message: Message):
     if not user: return
     try:
         await message.chat.restrict(user.id, permissions=ChatPermissions(can_send_messages=False))
+        await log_admin_action(message, user.id, "mute")
         await message.reply(f"🔇 {user.full_name} ko mute kar diya gaya.")
     except Exception as e:
         await message.reply(f"❌ Error: {e}")
@@ -80,6 +90,7 @@ async def unmute_cmd(message: Message):
     if not user: return
     try:
         await message.chat.restrict(user.id, permissions=ChatPermissions(can_send_messages=True, can_send_audios=True, can_send_documents=True, can_send_photos=True, can_send_videos=True, can_send_video_notes=True, can_send_voice_notes=True, can_send_other_messages=True, can_add_web_page_previews=True))
+        await log_admin_action(message, user.id, "unmute")
         await message.reply(f"🔊 {user.full_name} ko unmute kar diya gaya.")
     except Exception as e:
         await message.reply(f"❌ Error: {e}")
@@ -101,6 +112,7 @@ async def warn_cmd(message: Message):
         await session.commit()
         stmt = select(Warning).where(Warning.group_id == message.chat.id, Warning.user_id == user.id)
         warns = (await session.execute(stmt)).scalars().all()
+    await log_admin_action(message, user.id, "warn", reason)
     await message.reply(f"⚠️ {user.full_name} ko warning di. Total: {len(warns)}\nReason: {reason}")
 
 
@@ -129,6 +141,7 @@ async def rmwarn_cmd(message: Message):
         if warn:
             await session.delete(warn)
             await session.commit()
+            await log_admin_action(message, user.id, "remove_warning")
             return await message.reply(f"✅ {user.full_name} ki ek warning hata di.")
     await message.reply("❌ Koi warning nahi mili.")
 

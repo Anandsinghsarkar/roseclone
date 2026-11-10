@@ -9,7 +9,7 @@ from aiogram.enums import ParseMode
 
 from config import settings
 from database.session import init_db
-from handlers import admin, start, moderation, welcome, locks, notes, utilities, custom_commands
+from handlers import admin, start, moderation, welcome, locks, notes, utilities, custom_commands, advanced_moderation
 from middlewares.lock_enforcement import LockEnforcementMiddleware
 from middlewares.throttling import ThrottlingMiddleware
 from middlewares.anti_abuse import AntiAbuseMiddleware
@@ -44,6 +44,7 @@ async def main():
     dp.include_router(admin.router)
     dp.include_router(utilities.router)
     dp.include_router(moderation.router)
+    dp.include_router(advanced_moderation.router)
     dp.include_router(welcome.router)
     dp.include_router(locks.router)
     dp.include_router(notes.router)

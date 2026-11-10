@@ -70,7 +70,7 @@ MENU_TEXT = {
     "menu:moderation": "🛡 <b>Moderation</b>\nReply karke: /ban /unban /kick /mute /unmute /warn /warns /rmwarn /pin /del",
     "menu:locks": "🔒 <b>Locks</b>\n/lock TYPE • /unlock TYPE • /locks\nTypes: text, links, photos, videos, stickers, gifs, forwards, bots, audio, voice, documents\nLocked content automatically delete hoga aur warning jayegi.",
     "menu:warnings": "⚠️ <b>Warnings</b>\nLocked content par warning automatically. Threshold hit hone par configured duration ka mute. Buttons se threshold/mute duration set karo: 👑 Admin → Warning Policy.",
-    "menu:welcome": "👋 <b>Welcome</b>\nVariables: {name}, {group}\n/setwelcome, /welcome, /setgoodbye, /goodbye. Web panel se message aur toggle manage karo.",
+    "menu:welcome": "👋 <b>Welcome & Security</b>\nVariables: {name}, {group}\n/setwelcome, /welcome, /setgoodbye, /goodbye\n/captcha on|off • /antiraid on|off\nJoin requests: group me Approve/Decline buttons. Web panel se welcome settings manage karo.",
     "menu:rules": "📜 <b>Rules</b>\n/setrules, /rules. Web panel se edit karo.",
     "menu:notes": "📝 <b>Notes</b>\n/save name → reply\n/get name • /notes • /clear name",
     "menu:admins": "👮 <b>Group Admins</b>\n/admins list dekho. Group admin: <code>/promote @username</code> aur <code>/demote @username</code>.",

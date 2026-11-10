@@ -18,6 +18,8 @@ Telegram group-management bot built with aiogram 3.x, SQLAlchemy async and FastA
 - Anti-flood protection using each group's configured flood limit.
 - Duplicate-message suppression.
 - `/afk [reason]` status command (in-memory; resets when bot restarts).
+- `/tban 30m|2h|7d [reason]` and `/tmute 30m|2h|7d [reason]` by replying to a member; Telegram automatically expires the restriction.
+- `/logs` shows the latest 15 recorded actions from the new audit log table.
 - `/report [reason]` by replying to a message (admins need to have started the bot to receive DMs).
 - `/purge` by replying to the first message; deletes up to 100 messages.
 - Database-backed aggregate `/stats` and `/groupstats`.
@@ -33,6 +35,7 @@ Telegram group-management bot built with aiogram 3.x, SQLAlchemy async and FastA
 /addcmd NAME RESPONSE /delcmd NAME
 /addfilter KEYWORD RESPONSE /delfilter KEYWORD /filters
 /afk [reason] /report [reason] /purge /groupstats /stats /ping /id /info /admins
+/tban DURATION [reason] /tmute DURATION [reason] /logs
 ```
 
 ## Notes
@@ -52,3 +55,10 @@ python bot.py
 docker build -t anonymouse .
 docker run --env-file .env -p 8080:8080 anonymouse
 ```
+
+
+## Security and join protection
+- `/captcha on|off`: require new members to press their personal verification button before chatting. Bot needs permission to restrict members.
+- `/antiraid on|off`: five joins in 30 seconds trigger CAPTCHA for 10 minutes. Join-rate counters are process-local; active raid expiry is stored in the database.
+- Join requests appear in the group with admin-only Approve/Decline buttons. Bot needs permission to manage join requests.
+- Security settings and pending CAPTCHA challenges are stored in new database tables.
