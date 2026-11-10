@@ -114,6 +114,20 @@ class LockEnforcementMiddleware(BaseMiddleware):
                 session.add(group)
             else:
                 group.title = event.chat.title or group.title
+            group_user = await session.get(GroupUser, (event.chat.id, event.from_user.id))
+            if not group_user:
+                group_user = GroupUser(
+                    group_id=event.chat.id, user_id=event.from_user.id,
+                    username=event.from_user.username,
+                    first_name=event.from_user.first_name or event.from_user.full_name,
+                    is_bot=event.from_user.is_bot,
+                )
+                session.add(group_user)
+            else:
+                group_user.username = event.from_user.username
+                group_user.first_name = event.from_user.first_name or event.from_user.full_name
+                group_user.is_bot = event.from_user.is_bot
+                group_user.last_seen = datetime.utcnow()
             user = await session.get(User, event.from_user.id)
             if not user:
                 user = User(id=event.from_user.id, username=event.from_user.username, first_name=event.from_user.first_name or event.from_user.full_name)
