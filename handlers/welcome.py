@@ -1,5 +1,6 @@
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
+from html import escape
 
 from aiogram import Router
 from aiogram.filters import Command
@@ -26,6 +27,23 @@ async def get_or_create_group(chat_id: int, title: str = "") -> Group:
             await session.commit()
             await session.refresh(group)
         return group
+
+
+
+
+async def _render_member_template(bot, user, group_title: str, template: str) -> str:
+    username = f"@{user.username}" if user.username else "No username"
+    mention = f'<a href="tg://user?id={user.id}">{escape(user.full_name)}</a>'
+    values = {
+        "{name}": escape(user.full_name),
+        "{username}": escape(username),
+        "{id}": str(user.id),
+        "{mention}": mention,
+        "{group}": escape(group_title),
+    }
+    for key, value in values.items():
+        template = template.replace(key, value)
+    return template[:1024]
 
 
 async def _security_for_join(chat_id: int, user_id: int, title: str):
@@ -98,7 +116,12 @@ async def on_member_update(event: ChatMemberUpdated):
                     return
                 template = group.welcome_text or "👋 Welcome {name} to {group}!"
             try:
-                await event.bot.send_message(chat.id, template.replace("{name}", user.full_name).replace("{group}", chat.title or "the group"))
+                caption = await _render_member_template(event.bot, user, chat.title or "the group", template)
+                photos = await event.bot.get_user_profile_photos(user.id, limit=1)
+                if photos.total_count and photos.photos:
+                    await event.bot.send_photo(chat.id, photos.photos[0][-1].file_id, caption=caption)
+                else:
+                    await event.bot.send_message(chat.id, caption)
             except Exception:
                 pass
 
@@ -109,7 +132,12 @@ async def on_member_update(event: ChatMemberUpdated):
                 return
             template = group.goodbye_text
         try:
-            await event.bot.send_message(chat.id, template.replace("{name}", user.full_name).replace("{group}", chat.title or "the group"))
+            caption = await _render_member_template(event.bot, user, chat.title or "the group", template)
+            photos = await event.bot.get_user_profile_photos(user.id, limit=1)
+            if photos.total_count and photos.photos:
+                await event.bot.send_photo(chat.id, photos.photos[0][-1].file_id, caption=caption)
+            else:
+                await event.bot.send_message(chat.id, caption)
         except Exception:
             pass
 
@@ -232,7 +260,7 @@ async def setwelcome_cmd(message: Message):
     if not await is_chat_admin(message):
         return await message.reply("⛔ Sirf Telegram admin welcome change kar sakta hai.")
     if not message.reply_to_message or not message.reply_to_message.text:
-        return await message.reply("❌ Kisi text message pe reply karke /setwelcome karo. Variables: {name}, {group}")
+        return await message.reply("❌ Kisi text message pe reply karke /setwelcome karo. Variables: {name}, {username}, {mention}, {id}, {group}. Profile photo is attached automatically when available.")
     async with async_session() as session:
         group = await session.get(Group, message.chat.id)
         if not group:
@@ -259,7 +287,7 @@ async def setgoodbye_cmd(message: Message):
     if not await is_chat_admin(message):
         return await message.reply("⛔ Sirf Telegram admin goodbye change kar sakta hai.")
     if not message.reply_to_message or not message.reply_to_message.text:
-        return await message.reply("❌ Kisi text message pe reply karke /setgoodbye karo.")
+        return await message.reply("❌ Kisi text message pe reply karke /setgoodbye karo. Variables: {name}, {username}, {mention}, {id}, {group}.")
     async with async_session() as session:
         group = await session.get(Group, message.chat.id)
         if not group:

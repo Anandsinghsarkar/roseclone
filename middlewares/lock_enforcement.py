@@ -5,7 +5,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import ChatPermissions, Message
 from sqlalchemy import delete, select
 
-from database.models import Group, Lock, User, Warning, WarningPolicy
+from database.models import Group, GroupUser, Lock, User, Warning, WarningPolicy
 from database.session import async_session
 from utils.permissions import is_chat_admin
 
@@ -26,6 +26,12 @@ def message_lock_types(message: Message) -> set[str]:
     if message.voice: found.add("voice")
     if message.document: found.add("documents")
     if message.forward_origin: found.add("forwards")
+    if message.video_note: found.add("video_notes")
+    if message.contact: found.add("contacts")
+    if message.location or message.venue: found.add("locations")
+    if message.poll or message.poll_answer: found.add("polls")
+    if message.dice: found.add("dice")
+    if message.game: found.add("games")
     if message.from_user and message.from_user.is_bot: found.add("bots")
     return found
 
@@ -56,6 +62,20 @@ class LockEnforcementMiddleware(BaseMiddleware):
                 group = Group(id=event.chat.id, title=event.chat.title or "")
                 session.add(group)
             user = await session.get(User, event.from_user.id)
+            group_user = await session.get(GroupUser, (event.chat.id, event.from_user.id))
+            if not group_user:
+                group_user = GroupUser(
+                    group_id=event.chat.id, user_id=event.from_user.id,
+                    username=event.from_user.username,
+                    first_name=event.from_user.first_name or event.from_user.full_name,
+                    is_bot=event.from_user.is_bot,
+                )
+                session.add(group_user)
+            else:
+                group_user.username = event.from_user.username
+                group_user.first_name = event.from_user.first_name or event.from_user.full_name
+                group_user.is_bot = event.from_user.is_bot
+                group_user.last_seen = datetime.utcnow()
             if not user:
                 user = User(id=event.from_user.id, username=event.from_user.username, first_name=event.from_user.first_name or event.from_user.full_name)
                 session.add(user)
@@ -88,6 +108,26 @@ class LockEnforcementMiddleware(BaseMiddleware):
 
     async def _remember_user(self, event: Message):
         async with async_session() as session:
+            group = await session.get(Group, event.chat.id)
+            if not group:
+                group = Group(id=event.chat.id, title=event.chat.title or "")
+                session.add(group)
+            else:
+                group.title = event.chat.title or group.title
+            group_user = await session.get(GroupUser, (event.chat.id, event.from_user.id))
+            if not group_user:
+                group_user = GroupUser(
+                    group_id=event.chat.id, user_id=event.from_user.id,
+                    username=event.from_user.username,
+                    first_name=event.from_user.first_name or event.from_user.full_name,
+                    is_bot=event.from_user.is_bot,
+                )
+                session.add(group_user)
+            else:
+                group_user.username = event.from_user.username
+                group_user.first_name = event.from_user.first_name or event.from_user.full_name
+                group_user.is_bot = event.from_user.is_bot
+                group_user.last_seen = datetime.utcnow()
             user = await session.get(User, event.from_user.id)
             if not user:
                 user = User(id=event.from_user.id, username=event.from_user.username, first_name=event.from_user.first_name or event.from_user.full_name)
