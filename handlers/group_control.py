@@ -5,7 +5,7 @@ from io import BytesIO
 from sqlalchemy import select
 
 from config import settings
-from database.models import Group
+from database.models import Group, GroupUser
 from database.session import async_session
 from utils.permissions import is_bot_admin, is_chat_admin
 
@@ -56,7 +56,7 @@ async def groupadmins(message: Message):
     if message.chat.type not in {"group", "supergroup"} or not await is_chat_admin(message):
         return await message.reply("⛔ Is command ko group admin use kare.")
     try:
-        admins = await message.bot.get_chat_administrators(message.chat.id, return_bots=True)
+        admins = await message.bot.get_chat_administrators(message.chat.id)
         lines = []
         for item in admins:
             user = item.user
@@ -149,3 +149,36 @@ async def demoteuser(message: Message):
         await message.reply(f"✅ {target.full_name} demote ho gaye.")
     except Exception as exc:
         await message.reply(f"❌ Demote failed. Telegram authority/permissions check karein.\n{exc}")
+
+
+
+@router.message(Command("knownusers"))
+async def knownusers(message: Message):
+    if message.chat.type not in {"group", "supergroup"} or not await is_chat_admin(message):
+        return await message.reply("⛔ Group admin only.")
+    async with async_session() as session:
+        rows = (await session.execute(
+            select(GroupUser).where(GroupUser.group_id == message.chat.id, GroupUser.is_bot.is_(False))
+            .order_by(GroupUser.last_seen.desc()).limit(40)
+        )).scalars().all()
+    if not rows:
+        return await message.reply("Abhi is group ke koi users bot ke saamne record nahi hue.")
+    lines = [f"• {row.first_name} (@{row.username or 'no_username'}) — <code>{row.user_id}</code>" for row in rows]
+    await message.reply("<b>👥 Known group users (latest 40)</b>\n" + "\n".join(lines) +
+                        "\n\nNote: Ye complete live member list nahi hai; sirf woh users hain jinhe bot ne messages me dekha hai.")
+
+
+@router.message(Command("knownbots"))
+async def knownbots(message: Message):
+    if message.chat.type not in {"group", "supergroup"} or not await is_chat_admin(message):
+        return await message.reply("⛔ Group admin only.")
+    async with async_session() as session:
+        rows = (await session.execute(
+            select(GroupUser).where(GroupUser.group_id == message.chat.id, GroupUser.is_bot.is_(True))
+            .order_by(GroupUser.last_seen.desc()).limit(40)
+        )).scalars().all()
+    if not rows:
+        return await message.reply("Bot ne abhi is group me koi doosra bot message karte nahi dekha.")
+    lines = [f"• {row.first_name} (@{row.username or 'no_username'}) — <code>{row.user_id}</code>" for row in rows]
+    await message.reply("<b>🤖 Known bots (latest 40)</b>\n" + "\n".join(lines) +
+                        "\n\nNote: Ye complete live bot list nahi hai; sirf message kar chuke bots hain.")
