@@ -1,6 +1,7 @@
 from aiogram import Router
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.types import Message, BufferedInputFile
+from io import BytesIO
 from sqlalchemy import select
 
 from config import settings
@@ -88,8 +89,11 @@ async def setgroupphoto(message: Message):
     if not replied or not replied.photo:
         return await message.reply("Group photo wali image par reply karke /setgroupphoto bhejein.")
     try:
-        photo = replied.photo[-1].file_id
-        await message.bot.set_chat_photo(message.chat.id, photo)
+        file_info = await message.bot.get_file(replied.photo[-1].file_id)
+        buffer = BytesIO()
+        await message.bot.download_file(file_info.file_path, destination=buffer)
+        upload = BufferedInputFile(buffer.getvalue(), filename="group-photo.jpg")
+        await message.bot.set_chat_photo(message.chat.id, upload)
         await message.reply("✅ Group photo updated.")
     except Exception as exc:
         await message.reply(f"❌ Photo update failed. Bot ko Change Group Info permission chahiye.\n{exc}")
