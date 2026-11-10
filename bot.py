@@ -9,7 +9,7 @@ from aiogram.enums import ParseMode
 
 from config import settings
 from database.session import init_db
-from handlers import admin, start, moderation, welcome, locks, notes, utilities, custom_commands, filters
+from handlers import admin, start, moderation, welcome, locks, notes, utilities, custom_commands
 from middlewares.lock_enforcement import LockEnforcementMiddleware
 from middlewares.throttling import ThrottlingMiddleware
 from middlewares.anti_abuse import AntiAbuseMiddleware
@@ -47,7 +47,6 @@ async def main():
     dp.include_router(welcome.router)
     dp.include_router(locks.router)
     dp.include_router(notes.router)
-    dp.include_router(filters.router)
     dp.include_router(custom_commands.router)
 
     web_task = asyncio.create_task(run_web(bot), name="web-dashboard")
