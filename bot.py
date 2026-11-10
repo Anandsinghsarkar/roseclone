@@ -47,8 +47,8 @@ async def main():
     dp.include_router(welcome.router)
     dp.include_router(locks.router)
     dp.include_router(notes.router)
-    dp.include_router(custom_commands.router)
     dp.include_router(filters.router)
+    dp.include_router(custom_commands.router)
 
     web_task = asyncio.create_task(run_web(bot), name="web-dashboard")
     logger.info("Anonymouse starting...")
